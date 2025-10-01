@@ -154,6 +154,7 @@ def match():
                     # 其他訊息忽略，繼續等
                     if peer_addr is not None:
                         break
+
             except OSError as e:
                 print("Socket error:", e)
                 sys.exit(1)
@@ -177,6 +178,8 @@ def match():
                     print("TCP accept timeout; opponent didn't connect.")
                     conn = None
                 break
+        if peer_addr is not None:
+            break
 
     if conn is None:
         return None, {"status": "waiting", "operation": "back"}
