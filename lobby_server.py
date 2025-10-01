@@ -304,7 +304,7 @@ def handle_client(conn: socket.socket, addr):
 
 
 USER_FILE = "userlist.json"
-HOST = "127.0.0.1"
+HOST = "0.0.0.0"
 PORT = 10099
 
 def main():
