@@ -390,7 +390,7 @@ class Ingame:
                     
                     break
                 else:
-                    send_json(opponent, {"call":num, "use_skill":self.use_skill_mode, "win":False})
+                    send_json(opponent, {"call":num, "use_skill":self.use_skill_mode, "win":False, "end_game":False})
                 print("\nwaiting for the opponent move ...")
 
         except (ConnectionError, OSError, KeyboardInterrupt) as e:
