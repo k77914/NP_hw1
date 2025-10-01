@@ -461,7 +461,7 @@ class Ingame:
         if self.use_skill_mode:
             self.skill -= 1
 
-        if self.skill < 0:
+        if self.skill <= 0:
             self.use_skill_mode = False
         return int(num)
         
