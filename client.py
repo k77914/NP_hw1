@@ -121,9 +121,11 @@ def match():
     peer_addr = None
     server_name = ["linux1", "linux2", "linux3", "linux4"]
     accessable_server = ["140.113.17.11", "140.113.17.12", "140.113.17.13", "140.113.17.14"]
+    waiting_list = []
     for sid in range(4):
-        for rec_port in range(10299, 20299, 200):
-            print("send invitation msg to ", server_name[sid], rec_port)
+        print("search on ", server_name[sid])
+        for rec_port in range(10299, 14299, 200):
+            #print("send invitation msg to ", server_name[sid], rec_port)
             try:
                 udp_s.sendto(b'FIND', (accessable_server[sid], rec_port))
                 while True:
@@ -133,24 +135,10 @@ def match():
                         break
 
                     if data.decode() == "ACK":
-                        print(f"{addr} give me ACK")
-                        udp_s.settimeout(20)
-                        try:
-                            data, addr = udp_s.recvfrom(1024)
-                        except socket.timeout:
-                            # 沒等到 ACCEPT/REJECT 就換下一個
-                            udp_s.settimeout(0.5)
-                            break
-                        if data.decode() == "ACCEPT" and addr[1] == rec_port:
-                            print(f"Opponent at {addr} accepted your invitation.")
-                            print("Sending game TCP info...")
-                            udp_s.settimeout(None)
-                            peer_addr = addr
-                            break
-                        elif data.decode() == "REJECT" and addr[1] == rec_port:
-                            print(f"Opponent at {addr} rejected your invitation.")
-                            udp_s.settimeout(1)
-                            break
+                        print(f"Find {addr}")
+                        waiting_list.append(addr)
+
+            
                     # 其他訊息忽略，繼續等
                     if peer_addr is not None:
                         break
@@ -161,34 +149,71 @@ def match():
 
             # 如果有對手接受（peer_addr 設定過），就開 TCP 等對方連
             if peer_addr is not None:
-                tcp_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                tcp_s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                tcp_s.bind(("", 0))
-                tcp_port = tcp_s.getsockname()[1]
-                udp_s.sendto(f"TCP,{tcp_port}".encode(), peer_addr)
+    
+    while conn is None and not waiting_list:
+        op = ""
+        while op is "" or not op.isdigit():
+            id = 1
+            for p in waiting_list:
+                print(id, ".:", p)
+                id += 1
+            print("Choose one to invite / or enter leave to leave:")
+            op = nb_input()
+            if op == "leave":
                 udp_s.close()
-
-                tcp_s.listen()
-                tcp_s.settimeout(20)  # 避免無限卡在 accept
-                print("Waiting for opponent to connect...")
-                try:
-                    conn, addr = tcp_s.accept()
-                    print(f"Opponent connected from {addr}")
-                except socket.timeout:
-                    print("TCP accept timeout; opponent didn't connect.")
-                    conn = None
+                return None, {"status": "waiting", "operation": "back"}
+            elif op.isdigit() and 0 < int(op) <= waiting_list.count():
                 break
-        if peer_addr is not None:
-            break
+        ## get op == id
+        udp_s.sendto(b'INVITE', waiting_list[int(op)-1])
+        udp_s.settimeout(20)
+        try:
+            data, addr = udp_s.recvfrom(1024)
+        except socket.timeout:
+            # 沒等到 ACCEPT/REJECT 就換下一個
+            waiting_list.pop(int(op)-1)
+            udp_s.settimeout(None)
+            continue
+        if data.decode() == "ACCEPT" and addr[1] == rec_port:
+            print(f"Opponent at {addr} accepted your invitation.")
+            print("Sending game TCP info...")
+            udp_s.settimeout(None)
+            peer_addr = addr ### ok
+            
+        elif data.decode() == "REJECT" and addr[1] == rec_port:
+            print(f"Opponent at {addr} rejected your invitation.")
+            waiting_list.pop(int(op)-1)
+            udp_s.settimeout(None)
+            continue
+
+
+
+
+        tcp_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        tcp_s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        tcp_s.bind(("", 0))
+        tcp_port = tcp_s.getsockname()[1]
+        udp_s.sendto(f"TCP,{tcp_port}".encode(), peer_addr)
+        udp_s.close()
+
+        tcp_s.listen()
+        tcp_s.settimeout(20)  # 避免無限卡在 accept
+        print("Waiting for opponent to connect...")
+        try:
+            conn, addr = tcp_s.accept()
+            print(f"Opponent connected from {addr}")
+        except socket.timeout:
+            print("TCP accept timeout; opponent didn't connect.")
+            conn = None
+    
 
     if conn is None:
         return None, {"status": "waiting", "operation": "back"}
-    print("return match!")
     return conn, {"status": "waiting", "operation": "join_game", "other": "from match"}
 
 def create_room():
     tcp_s = None
-    for port in range(10699, 20299, 200):
+    for port in range(10699, 14299, 200):
         try:
             udp_s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             udp_s.bind(("", port))
@@ -214,6 +239,7 @@ def create_room():
 
                 if data.decode() == "FIND":
                     udp_s.sendto(b'ACK', addr)
+                elif data.decode() == "INVITE":
                     print(f"Received game invitation from {addr}: FIND")
                     print("Accept invitation? Type 'y' to accept, 'n' to reject. (or 'leave' to go back)")
 
