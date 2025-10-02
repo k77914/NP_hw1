@@ -202,6 +202,7 @@ def match():
     
 
     if conn is None:
+        print("Matching Fail, back to the lobby")
         return None, {"status": "waiting", "operation": "back"}
     return conn, {"status": "waiting", "operation": "join_game", "other": "from match"}
 
@@ -622,7 +623,7 @@ with socket.create_connection((SERVER_HOST, SERVER_PORT)) as s:
                 print("bye!")
                 player_status = status["init"]
         elif player_status == status["matching"]:
-            print("recv server's response, matching")
+
             # match success
             if resp["type"] == "join_game":
                 player_status = status["gaming"]
