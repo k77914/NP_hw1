@@ -116,7 +116,7 @@ def logout():
 def match():
     #os.system('cls' if os.name == 'nt' else 'clear')
     udp_s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    udp_s.settimeout(0.5)
+    udp_s.settimeout(0.25)
     conn = None
     peer_addr = None
     server_name = ["linux1", "linux2", "linux3", "linux4"]
@@ -124,7 +124,7 @@ def match():
     waiting_list = []
     for sid in range(4):
         print("search on ", server_name[sid])
-        for rec_port in range(10299, 14299, 200):
+        for rec_port in range(10299, 12299, 200):
             #print("send invitation msg to ", server_name[sid], rec_port)
             try:
                 udp_s.sendto(b'FIND', (accessable_server[sid], rec_port))
@@ -147,7 +147,7 @@ def match():
         while op is "" or not op.isdigit():
             id = 1
             for p in waiting_list:
-                print(id, ".:", p)
+                print(id, ":", p)
                 id += 1
             print("Choose one to invite / or enter leave to leave:")
             op = nb_input()
@@ -166,13 +166,13 @@ def match():
             waiting_list.pop(int(op)-1)
             udp_s.settimeout(None)
             continue
-        if data.decode() == "ACCEPT" and addr[1] == rec_port:
+        if data.decode() == "ACCEPT":
             print(f"Opponent at {addr} accepted your invitation.")
             print("Sending game TCP info...")
             udp_s.settimeout(None)
             peer_addr = addr ### ok
             
-        elif data.decode() == "REJECT" and addr[1] == rec_port:
+        elif data.decode() == "REJECT":
             print(f"Opponent at {addr} rejected your invitation.")
             waiting_list.pop(int(op)-1)
             udp_s.settimeout(None)
