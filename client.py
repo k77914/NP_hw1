@@ -142,7 +142,7 @@ def match():
                 print("Socket error:", e)
                 sys.exit(1)
     
-    while conn is None and waiting_list.count() > 0:
+    while conn is None and len(waiting_list) > 0:
         op = ""
         while op is "" or not op.isdigit():
             id = 1
@@ -154,7 +154,7 @@ def match():
             if op == "leave":
                 udp_s.close()
                 return None, {"status": "waiting", "operation": "back"}
-            elif op.isdigit() and 0 < int(op) <= waiting_list.count():
+            elif op.isdigit() and 0 < int(op) <= len(waiting_list):
                 break
         ## get op == id
         udp_s.sendto(b'INVITE', waiting_list[int(op)-1])
