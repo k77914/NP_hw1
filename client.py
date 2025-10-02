@@ -144,14 +144,16 @@ def match():
     
     while conn is None and len(waiting_list) > 0:
         op = ""
+        print("")
         while op is "" or not op.isdigit():
             id = 1
             for p in waiting_list:
                 print(id, ":", p)
                 id += 1
-            print("Choose one to invite / or enter leave to leave:")
+            print("\nChoose one to invite / or enter leave to leave:")
             op = nb_input()
             if op == "leave":
+                print("Leave, go back to the lobby")
                 udp_s.close()
                 return None, {"status": "waiting", "operation": "back"}
             elif op.isdigit() and 0 < int(op) <= len(waiting_list):
@@ -232,7 +234,7 @@ def create_room():
                 if data.decode() == "FIND":
                     udp_s.sendto(b'ACK', addr)
                 elif data.decode() == "INVITE":
-                    print(f"Received game invitation from {addr}: FIND")
+                    print(f"Received game invitation from {addr}: INVITE")
                     print("Accept invitation? Type 'y' to accept, 'n' to reject. (or 'leave' to go back)")
 
                     # 非阻塞等待 y/n/leave
@@ -365,6 +367,7 @@ class Ingame:
 
             while not move_first:
                 self.show_map()
+                print("waiting for the opponent move ...")
                 n = struct.unpack("!I", recvn(opponent, 4))[0]
                 resp = json.loads(recvn(opponent, n).decode("utf-8"))
                 if resp["operation"] == "ok":
@@ -381,7 +384,6 @@ class Ingame:
                 elif resp["end_game"] == True: # opponent give up the game
                     self.win = True
                     self.end_game = True
-                    print("\nOpponent gave up the game, let you down")
                     break
                 if not resp["use_skill"]:
                     self.update(resp["call"])
@@ -476,11 +478,10 @@ class Ingame:
         while num == "0" or not num.isdigit():
             print("enter the number:", end="")
             num = nb_input()
-        if self.use_skill_mode:
-            self.skill -= 1
-
         if self.skill <= 0:
             self.use_skill_mode = False
+        if self.use_skill_mode:
+            self.skill -= 1
         return int(num)
         
     def update(self, num):
