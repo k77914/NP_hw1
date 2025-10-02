@@ -138,19 +138,11 @@ def match():
                         print(f"Find {addr}")
                         waiting_list.append(addr)
 
-            
-                    # 其他訊息忽略，繼續等
-                    if peer_addr is not None:
-                        break
-
             except OSError as e:
                 print("Socket error:", e)
                 sys.exit(1)
-
-            # 如果有對手接受（peer_addr 設定過），就開 TCP 等對方連
-            if peer_addr is not None:
     
-    while conn is None and not waiting_list:
+    while conn is None and waiting_list.count() > 0:
         op = ""
         while op is "" or not op.isdigit():
             id = 1
