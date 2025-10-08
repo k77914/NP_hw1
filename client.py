@@ -81,7 +81,7 @@ def lobby():
         print("\n=== Lobby ===")
         print("1. Find an opponent")
         print("2. Create a room")
-        print("3. Learning rule")
+        print("3. Learn rule")
         print("4. Show profile")
         print("5. Logout")
         op = nb_input(">>>> ").strip()
@@ -100,17 +100,9 @@ def lobby():
     elif op == "2":
         msg = {"status": "lobby", "operation":"create_room"}
     elif op == "4":
-        msg = show_profile()
+        msg = {"status": "lobby", "operation":"show_profile"}
     elif op == "5":
-        msg = logout()
-    return msg
-
-def show_profile():
-    msg = {"status": "lobby", "operation":"show_profile"}
-    return msg
-
-def logout():
-    msg = {"status": "lobby", "operation":"logout"}
+        msg = {"status": "lobby", "operation":"logout"}
     return msg
 
 def match():
@@ -208,7 +200,7 @@ def match():
 
 def create_room():
     tcp_s = None
-    for port in range(10699, 14299, 200):
+    for port in range(10699, 12299, 200):
         try:
             udp_s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             udp_s.bind(("", port))
@@ -407,7 +399,7 @@ class Ingame:
 
                 if self.check_win():
                     self.win = True
-                    send_json(opponent, {"call":num, "use_skill":self.use_skill_mode, "win":True})
+                    send_json(opponent, {"call":num, "use_skill":self.use_skill_mode, "win":True, "end_game":True})
                     
                     break
                 else:
@@ -594,7 +586,7 @@ with socket.create_connection((SERVER_HOST, SERVER_PORT)) as s:
                 print(f"login ok!, hello {msg['username']}")
                 player_status = status["lobby"]
 
-            elif msg["operation"] == "exit" and resp["type"] == "bye":
+            elif msg["operation"] == "exit" and resp["type"] == "exit":
                 os.system("clear")
                 print("")
                 print("bye! Leave system")
@@ -618,7 +610,7 @@ with socket.create_connection((SERVER_HOST, SERVER_PORT)) as s:
                 print(f"Win: {resp['win']}")
                 print(f"Total games: {resp['total_games']}")
 
-            elif msg["operation"] == "logout" and resp["type"] == "bye":
+            elif msg["operation"] == "logout" and resp["type"] == "logout":
                 os.system('clear')
                 print("bye!")
                 player_status = status["init"]

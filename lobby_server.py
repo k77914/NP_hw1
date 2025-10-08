@@ -175,7 +175,7 @@ def register(username, password):
         msg = {"type":"error","detail":"account_exist, please change another username"}
     else:
         save_users(username, password)
-        msg = {"status":"init", "type":"register_ok", "username":username}
+        msg = {"type":"register_ok", "username":username}
     return msg
 
 def login(username, password):
@@ -187,7 +187,7 @@ def login(username, password):
             return {"type":"error","detail":"user already login"}, u
         save_users(username, password, status="lobby")
         u = username
-        msg = {"status":"init", "type":"login_ok"}
+        msg = {"type":"login_ok"}
     else:
         msg = {"type":"error","detail":"login fail, wrong username or password"}
     return msg, u
@@ -235,7 +235,7 @@ def handle_client(conn: socket.socket, addr):
                     resp, username = login(u, p)
 
                 elif operation == "exit":
-                    send_json(conn, {"type":"bye","msg":"Disconnecting"})
+                    send_json(conn, {"type":"exit"})
                     break
                 else:
                     resp = {"type":"error","detail":"unknown_operation"}
@@ -261,7 +261,7 @@ def handle_client(conn: socket.socket, addr):
                 elif operation == "logout":
                     if username != "":
                         save_users(username, None, status="offline")  # only modify status
-                    resp =  {"type":"bye","msg":"Disconnecting"}
+                    resp =  {"type":"logout"}
                     username = ""
                 else:
                     resp = {"type":"error","detail":"unknown_operation"}
